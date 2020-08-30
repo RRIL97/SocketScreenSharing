@@ -1,45 +1,4 @@
- 
-package Server;
-
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.IOException; 
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.Socket;  
-import javax.imageio.ImageIO;
-
- 
-public class ServerHandler implements Runnable {
-    
-    /**  Handled client socket  */
-    private Socket       clientSocket;  
-    private OutputStream serverOutWriter;
-    private PrintWriter  serverPrintWriter;
-    
-    public ServerHandler(Socket clientSocket)
-    {
-     this.clientSocket = clientSocket;   
-     
-     try{
-     this.serverPrintWriter = new PrintWriter(clientSocket.getOutputStream());
-     }catch(IOException e){}
-     
-     }
-    
-    public void sendMessage(String message)
-    {
-            serverPrintWriter.println(message);
-            serverPrintWriter.flush(); 
-    }
-    /* Kills current connection */
-
-package Server;
+ package Server;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
