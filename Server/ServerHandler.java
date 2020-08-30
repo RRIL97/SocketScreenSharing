@@ -38,6 +38,49 @@ public class ServerHandler implements Runnable {
             serverPrintWriter.flush(); 
     }
     /* Kills current connection */
+
+package Server;
+
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.IOException; 
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.net.Socket;  
+import javax.imageio.ImageIO;
+
+ 
+public class ServerHandler implements Runnable {
+    
+    /**  Handled client socket  */
+    private Socket       clientSocket;  
+    private OutputStream serverOutWriter;
+    private PrintWriter  serverPrintWriter;
+    
+    private boolean sendScreens        = false;
+    private Thread  remoteScreenThread = null;
+    
+    public ServerHandler(Socket clientSocket)
+    {
+     this.clientSocket = clientSocket;   
+     
+     try{
+     this.serverPrintWriter = new PrintWriter(clientSocket.getOutputStream());
+     }catch(IOException e){}
+     
+     }
+    
+    public void sendMessage(String message)
+    {
+            serverPrintWriter.println(message);
+            serverPrintWriter.flush(); 
+    }
+    /* Kills current connection */
     public void killConnection()
     {
         try {
@@ -63,23 +106,36 @@ public class ServerHandler implements Runnable {
     }
 
       
-   
+    Runnable remoteScreening = new Runnable()
+    {
+        public void run()
+        {
+            try{
+            serverOutWriter = clientSocket.getOutputStream();
+            while(sendScreens){ 
+            BufferedImage currenScreenStateImg = getScreenShot();
+	    ImageIO.write(currenScreenStateImg,"PNG",serverOutWriter);
+            serverOutWriter.flush();
+            }
+            }catch(Exception remoteScreenException){
+                
+            }
+        }
+    };
+    
     /**
     * Handles screen sharing with the client
     */
     public void remoteScreenShare()
+    { 
+        remoteScreenThread = new Thread(remoteScreening);
+        remoteScreenThread.start();  
+     }
+    public void stopRemoteScreenShare()
     {
-        try{
-        serverOutWriter = clientSocket.getOutputStream();
-        while(true){ 
-        BufferedImage currenScreenStateImg = getScreenShot();
-	ImageIO.write(currenScreenStateImg,"PNG",serverOutWriter);
-        serverOutWriter.flush();
-        }
-        }catch(IOException e){ 
-            e.printStackTrace();
-        }
-        }
+        sendScreens = false; 
+        if(remoteScreenThread != null) remoteScreenThread.stop();
+    }
     
     /**
     * Handles all communication from the client to the server 
@@ -99,16 +155,19 @@ public class ServerHandler implements Runnable {
              break;
          case "INITSH":  
              sendMessage("INITSH");
+             sendScreens = true;
              remoteScreenShare();
              break;
-         case "STOPSH":
+         case "STOPSH": //Not implemented yet
+             stopRemoteScreenShare(); 
              break;
      }
      }
      }catch(IOException e){ 
              System.out.println("Error Reading From Socket! " + e.getMessage());  
      } 
-     killConnection();
+     stopRemoteScreenShare();
+     killConnection(); 
     }
      
     @Override
@@ -116,3 +175,4 @@ public class ServerHandler implements Runnable {
         readSocket(); 
     }
 }
+
