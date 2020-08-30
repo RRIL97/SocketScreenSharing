@@ -80,7 +80,7 @@ public class Client implements Runnable{
     }
     
     /**
-    * Handles all communication from the server to the server 
+    * Handles all communication from the server to the client 
     */
     public void readSocket()
     { 
